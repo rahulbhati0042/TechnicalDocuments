@@ -1,0 +1,486 @@
+Hibernate 3.0 Important Points:
+
+[1] Feature of Hibernate 
+	- An ORM Tool
+	- Used in the data layer of applications
+	- Implements JPA(Java Persistent Application)
+### 3 ###
+[2] Creating First Hibernate Project
+	- Create a model class (com.ibm.dto)
+		- UserDetails
+			- private int userId;
+			- private String userName;
+			- Finally create getter and setter method for all members variables
+			- And model class speficy in the comfiguration file (Hibernate.cfg.xml)
+	- Annotation is use in the model class , following are
+		- @Entity
+		  Use along with the class level.
+		  It's says the hibernate to Model class behave as model class.
+
+		- @id
+		  Use on the member variables (while creating primary Key) to create primary class
+	- Create a main class to intialize  the model class Or persiste the object of model class into the database.
+		- HibernateTest: com.ibm.hibernate
+		- Now, Instantiate the UserDetail class(user) , and intialze the value.
+		- And persist the hibernate into the data ,use the Hibernate API.
+		- Steps for Using the Hibernate API
+			- Create a Session factory.
+			- Create a session from the session factory
+			- Use the session to save model objects.
+			- Example: 
+			  [1] SessionFactory sessionFactory = new Configuration().configure().buildSessionFactory();
+			  [2] Session session = sessionFactory.openSession();
+			  [3] session.beginTransaction();
+			  [4] session.save(user);
+			  [5] session.getTransaction().commit();
+### continue 3 in 4 ###
+[3] hbm2ddl Configuration and name annotation
+	
+	- Working with hbm2ddl.auto feture: Drop and re-create the schema
+		<!--  Drop and re-create the database schema on the startup-->
+		
+		<property name="hbm2ddl.auto">update</property>
+			
+			OR
+
+		<property name="hbm2ddl.auto">update</property>
+	
+	- @Entity (name="Table name"): Example @Entity (name="USER_DETAILS")
+	  This annotation is use along with name property for creating table name instead of class name (default class name work as table name into the database).
+	- @Column (name="Column name")
+	  Use with property name for model class . Default property name work as column name into the database table , but uising @Column (name="Column name") we can customize the column name.
+	  In model class @ID , @Column annotation is use on the top of property of the model class and also we can use these annotation on top of the getter method of the property of
+	  model class.
+
+### continue 4 in 5 ###
+[4] More annotation (Process with the basic configuration annotation, like as @Entity and @Id)
+	 - @Table (name=" Table name ") 
+	   It's work as @Entity (name="Table name") for creating name of table into the database. But there is some basic differnce . concept will be more clear in while HQL learing.
+	 - To learn more annotation need to add few more property in model class (Example UserDetails class) and create getter and setter for all those new properties.
+	 - Example :
+
+	   private Date joinedDate;
+	   private String address;
+	   private String description;
+
+	   And also set all those properties for testing perpose in HibernateTest class.
+	   Example:
+	   user.setUserId(1); 
+	   user.setUserNme("First User");
+	   user.setAddress("First user's Address");
+	   user.setJoinedDate(new Date);
+	   user.setDescription("Description of the user goes here");
+
+	- @Basic (also some properties of basic annotation)
+	- @Transient 
+	   Hibernate ignore trasient field in table . column will not create in database table.
+	- @Temporal (also can be use some property).
+	  Use with date property, save only date , save only timestamp, Or Both. 
+	  
+	  Example :
+	  @Temporal (TemporalType.DATE)
+	  @Temporal (TemporalType.TIME)
+
+	  If not using @Temporal annotation on Date property in model class  , then TimeStamp will be save into database table (default).
+	- @Lob
+	  This annotation is use to limit the default length the string type into the database length (Default lenght is 255 charachters).
+
+### 6 ####
+[5] Retrieving the Object using session.get()
+	- session.close()  : Till now in all example we are not using in any example, so lets check, how behave this close method in hibernate.
+	  close() method is use to close session. It's behave like finally block in JDBC connection.
+	- In hibernate , create SessionFactory object only one time, becuase it's a lot expensive . So share one session object in whole hibernate.
+	- After closing the session , how to fetch the user object ?
+	  Example:
+
+	  user = null;
+	  session = sessionFactory.opensSeeion();
+	  session.beginTransaction();
+	  user = (UserDetails)session.get(UserDetails.class, 1); // UserDetails.class, told to hibernate  fetch user object from databse)
+
+	  System.out.println("User Name Retrived is "+user.getUserName());
+### 7 ###
+[6] Primary Keys
+	
+	### Create base project , remove all unnecessary field , and extra annotation.
+	- what is natural key and sarogate key?
+	- Natual Key Example: for every user has email field is unique value , such type of filed is call natural key.
+
+          Exmple : loginID property in any other key, and this field also use for other purpose also like user authentication/validation, so suth type key is call natura key. 
+
+	- Sarogate Key Example : Serial number column doesnot use for any other purpose and doesnot carry any data , 
+	  its marking all different row only for column seperator and unique also , such type key is called sarogate key.
+
+	  Example: If userID (UserDetails.class) is serve only for primary key and doesnot use to any other business purpose , that is call sarogate key.
+	  So Hibenate can use to generato sarogate key ID. 	
+
+	- @Id @GeneratedValue 
+	  @GeneratedValue : we can use withought any strategy and als with  strategy.
+	  Example:
+	  @GeneratedValue (strategy=GenerationType.AUTO)
+
+	  This is annotation use in model clas property. On which property have to create primary key.
+	  And for testing purpose , need small modification in hibenate class also.
+	  
+	  Example:(Hibernate Test class)
+	  Remove the user.setUserId(1); // Because primary key is autogenerating through the model class.
+	  And also need to set some extra user infomation , like as 
+
+	  Create anothe user object :
+	  UserDetails user2 = new UserDetails();
+	  user2.setUserName("Second User");
+
+	  And also save this user 
+	  session.save(user2);
+
+
+
+### 8 ###
+################ Check the update Document for more explanation  #########
+[7] Value Type and Embedding Objects
+	- How to store array, list , set , we can store into the database.
+	- Example Address, If need to store into the database , like as Office address,  Local adddress, Permanent Address etc, 
+	  All above address type is may be in the list Or in the array.
+	  It's also called object inside the object.
+	  We will use another object inside any other model object as value object.
+
+	- Example of Embedded class
+	  Create a Address class with the following properties
+
+	  private String street;
+	  private String city;
+	  private String state;
+	  private String pincode;
+
+	  // And create getter and setter method for all the properties of the Address class.
+	  // User Annotation @Embedded
+
+	  @Embeddable : For Example , this annotation use in Address class at top of class.
+	  and this allow Address class to Embedded into another class.
+
+	  @Embedded : For examlple, this annotation is use in UserDetails class. 
+	  and this allow to embedded to Address class into another class(UserDetails class).
+
+	- Also need to modified into the HibernateTest class for add the address detail for different users.
+	  Example:
+
+	  Address addr = new Address();
+	  addr.setStreet("Street Name");
+	  addr.setCity("City Name");
+
+	  user.setAddress(addr);
+
+
+#### continue 8 in 9 ######
+[8] Attributes Overrides and Embedded Object Keys
+
+	- Suppose I have an Address class with state, city, state, pincode properties.
+	  Qestion is that, how One address class with same properteis will work for the different addresses, 
+	  like as officeAddress as well as homeAddress.
+	  Solution is that for above query, first need to use @Column annotation for all properties in Address class(for example) and then
+	  overried those properties into the UserDetials's class  embedded properties for Address class.
+	  At the time of field overried , we can condier hom many field need to overried.
+
+	  Example :
+	  [1] Need to add @Column annotation with all properties into the address class like as 
+
+	  @Column (name="STREET_NAME")
+       	  private String street;
+	  @Column (name="CITY_NAME")
+	  private String city;
+	  @Column (name="STATE_NAME")
+	  private String state;
+	  @Column (name="PIN_CODE")
+	  private String pincode;
+
+	  // CREATE GETTER AND SETTER FOR ALL PROPETIES.
+	  [2] In UserDetails class 
+
+	  @Id @GeneratedValue(strategy=GenerationType.AUTO)
+	  private int userId;
+	  private String userName;
+
+		
+	  @Embedded
+	  @AttributeOverrides({
+	  @AttributeOverride(name="street", column=@Column(name="HOME_STREET_NAME")),
+	  @AttributeOverride(name="city", column=@Column(name="HOME_CITY_NAME")),
+	  @AttributeOverride(name="state", column=@Column(name="HOME_STATE_NAME")),
+	  @AttributeOverride(name="pincode", column=@Column(name="HOME_PINCODE_NAME"))
+	  })
+          
+	  @Embedded
+	  private Address officeAddress;
+
+
+	  [3]For testing need to modified in HibernateTest class also.
+
+	  UserDetails user = new UserDetails();
+	  user.setUserName("First User")
+
+	  Address addr = new Address();
+	  addr.setStreet("Street Name");
+	  addr.setCity("City Name");
+
+          user.setHomeAddress(addr);
+
+	  Address addr2 = new Address();
+	  addr2.setStreet("Second Street Name");
+	  addr2.setCity("Second City Name");
+
+          user.setHomeAddress(addr2);
+	  private Address homeAddress;
+	
+	- Note : we can also user embeddable id properties along with another embedded properties also.
+
+
+[9] Saving Collection
+
+	- Going forward with Address, there some situation can come , we dont know how much address can be instatiates, means how much address type will be required.
+	- For solving this situation , we can take Collection , like as Set, ArrayList, and more .
+	- With Current going example,
+	  We will take Set list for list of address.
+	  Example : In User Details class 
+	  private Set<Address> listOfAddress = new HashSet<Address>();
+
+	  For Testing such situation need to modified in HibernateTest class also, like as 
+
+	  UserDetails user = new UserDetails();
+	  user.setUserName("First User");
+
+	  Address addr1 = new Address();
+	  addr1.setStreet("First Street");
+	  addr1.setCity("First City");
+	  addr1.setState("First State");
+	  addr1.setPinCode("10001");
+
+	  Address addr2 = new Address();
+	  addr2.setStreet("Second Street");
+	  addr2.setCity("Second City");
+	  addr2.setState("Second State");
+	  addr2.setPinCode("20002");
+
+
+	  user.setListOfAddress().add(add1);
+	  user.setListOfAddress().add(add2);
+
+
+	- @ElementCollection : Use for work as a collection. It's use work as a seperat table.
+	   Using the above annotation in UserDetails call with collection properties, and once run finally application
+	   it will generate fews table into the database , like as
+
+	   USER_DETAILS, 
+	   UserDetails_listOfAddress
+
+#### Continue 9 in 10 ####
+[10] Configuring the collection and Adding the keys.
+
+	- While using Collection in UserDetails class, with @ElementCollection annotation , then table name formed with the combination of Class Name and collection variable name.
+	  Example :
+	  UserDetails_listOfAddress : In this example UserDetails is class name and listOfAddress is Set type collection variable name .
+
+	- @JoinTable (name="USER_ADDRESS"): UserDetails_listOfAddress table in database is not a meaningfull table name , so we can modified/customized according to requirements.
+	- @JoinTable (name="USER_ADDRESS" joinColumns=@JoinColumn(name="USER_ID")):
+	   Above annotations is use to change defult primary column name to customized.
+	   Default primary key name in new JoinTable , class name and field name.
+	   Example : In Current situtaion , Class Name is UserDetails and field name is userID , so new default formed file will be UserDetails_userID), so to change the default to customized field name 
+	   use JoinTable annotation with joinColumn=@JoinColumn(name="USER_ID").
+
+	- Instead taking the Set collection,  now we can use Collection for generate primary key in Address tables.
+	- @CollectionID :  this annotation is belongs from hibernate not from javax.presistance class.
+	  this annotation is use to generate primary key in the Address tables
+	  
+	  Example : 
+	  @GenericGenerator (name="hilo-gen" , strategy="hilo")
+	  @CollectionID(columns={@Column (name="Address_ID")}, generator="helo-gen", type=@Type(type="long"))
+	  private Collection<Address> listOfAddress = new ArraryList<Address>();
+
+	  ###Finall All Annotation ###
+	  @Embedded
+	  @ElementCollection
+	  @JoinTable (name="USER_ADDRESS", joinColumns=@JoinColumn(name="USER_ID"))
+	  @GenericGenerator (name="hilo-gen", strategy="hilo")
+	  @CollectionId(columns={@Column (name="Address_Id")}, generator="hilo-gen", type=@Type(type="long"))
+	  private Collection<Address> listOfAddress = new ArrayList<Address>();
+
+
+#### 12 ###
+[11] Proxy Objects and Eager and Lazy Fetching
+	- Continue above example 
+	- After closign the session , need to perfomed the following task
+	  
+	  Examle:
+	  user = null;
+	  session = sessionFactory.openSession();
+	  user = (UserDetails)session.get(UserDetails.class, 1);
+	  System.out.println(user.getListOfAddresses().size());
+	  
+	  Above code will work, duue to proxy object. Because hibernate create proxy object of class.
+
+	  ## If we made of changes in above code snipet, like as 
+	  user = null;
+	  session = sessionFactory.openSession();
+	  user = (UserDetails)session.get(UserDetails.class, 1);
+	  session.close();// code change
+          System.out.println(user.getListOfAddresses().size());
+	
+	  Above code will through the exceptoin Lazy loading.
+	   org.hibernate.LazyInitializationException: failed to lazily initialize a collection of role
+
+	- Lazy initialization : 
+	  Eager initialization: 
+  
+	  ## if above code leave as it is and user want to run application instead after close session , then we have to need do some modification in UserDetails class like as 
+
+	  @ElementCollection(fetch=FetchType.EAGER)
+	  @JoinTable(name="USER_ADDRESS" joinColumns=@JoinColumn(name="USER_ID"))
+	  private Collection<Address> listOfAddress = new ArraryList<Address>();
+
+
+
+############### Relationship , One to One, like as ############
+
+[12]
+	-  Neeed to understand relationship , need to create one new Entity , Vehicle
+	   @Entity
+	   Vehicle have following properties
+	   @Id GeneratedValue
+	   - private int vehicleId;
+	   - priaate String vehicleName;
+
+	   Also addd mapping into the configuration file also.
+
+	- For testing need to modified HiberanteTest class also like as 
+
+	  Vehicle vehicle =  new Vehicle(); 
+	  vehicle.setVehicleName("Car");
+	  .
+	  .
+	  .
+
+	  session.save(vehicle);
+
+	  Note : Test before any further operaion , to check table and Id for Vehicle is working fine or Not.
+
+	- To make one-to-one realationship UserDetails - to Vehicle
+	  Add Instance of Vehicle in UserDetails .
+	  Example : 
+	  @OneToOne
+	  private Vehicle vehicle;
+
+	  Also need to modified in HibenateTest class following with above code snipet like as 
+
+	  user.setVehicle(vehicle);
+
+	  And test test HibernateTest class and check the result also.
+	  -  Also change default column with customize column name.
+	  @OneToOne
+	  @JoinColumn(name="VEHICLE_ID")
+	  private Vehicle vehicle;
+
+
+#### continue 12 in 14 ###
+[13] OneToMay
+	- Continue above example : UserDetails class
+	- @OneToMany
+	  private Collection<Vehicle> vehicle = new ArrayList<Vehicle>();
+
+	-  change in HibernateTest class like as 
+	   Create another Vehicle object 
+	   
+	   Vehicle vehicle2 = new Vehicle();
+	   vehicle2.setVehicleName("jeep");
+	   .
+	   .
+	   .
+	   user.getVehicle().add(vehicle).
+	   .
+	   .
+
+	- We can also change default column name in Vehicle table using the @JoinTable like as 
+	  @OneToMany
+	  @JoinTable(name="USER_VEHICLE", joinColumns=@JoinColumn(name="USER_ID"),
+	                   inverseJoinColumns=@JoinColumn(name="VEHICLE_ID")
+	  )
+	  private Collection<Vehicle> vehicle = new ArrayList<Vehicle>();
+	
+	 - Reverse relationship : ManyToOne
+	   Add extrax properties in Vehicle class like as 
+	   
+	   @ManyToOne 
+	   private UserDetails user;
+	- HibernateTest class
+	  .
+	  .
+	  vehicle.setUser(user);
+	  vehicle2.setUser(user);
+
+####### continue 13 in 14 ####
+[14] mappedBy and Many To Many Mapping
+	- mappedBy property in @OneToMany is use to ManyToMany relationship
+	Example :
+	In UserDetail class
+	@OneToMany(mappedBy="user")
+	private Collection<Vehicle> vehicle = new ArrayList<Vehicle>();
+
+	In Vehicle class user @JoinColumn annotation
+	Example:
+	@ManyToOne
+	@JoinColumn(name="USER_ID")
+	private UserDetails user;
+	
+	- For ManyToMany relationship remove all unnecessary annotation from UseDetails and Vehicle classes
+
+	In UserDetail class
+	private Collection<Vehicle> vehicle = new ArrayList<Vehicle>();
+	  
+	In Vehicle class
+	Example:
+	private UserDetails user;
+
+	- Make necessary change in UserDetails and Vehicle Classes
+
+	  Vehicle class
+	  @ManyToMany	  
+	  private Collection<UserDetails> userList = new ArrayList<UserDetails>();
+	  
+	  UserDetails class
+	  @ManyToMany	  
+	  private Collection<UserDetails> vehicleList = new ArrayList<UserDetails>();
+
+
+	- Change also in HinbernateTest Class
+	  .
+	  .
+	  .
+	  vehicle.getUserList().add(user);
+	  vehicle2.getUserList().add(user);
+	  .
+	  .
+
+	  After changes run application.
+	- When we run application with ManyToMany relation , then create two table .
+	  But we want need create one table , then we need to change any of the class with @ManyToMany(mapedBy="  ")
+	  Example:
+	  In Vehicle class need change 
+	  @ManyToMany(mappedBy="vehicle")	  
+	  private Collection<UserDetails> userList = new ArrayList<UserDetails>();
+
+
+[15] Inheritance 
+
+
+
+
+
+	
+
+
+
+
+
+	 
+
+
+	  
+	
